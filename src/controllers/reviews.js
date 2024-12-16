@@ -4,11 +4,16 @@ const request = require("../utils/request.js");
 
 
 function reviews_all(req, res){
-    const stm = "SELECT * FROM reviews JOIN users ON reviews.user_id = users.id WHERE business_id = ?";
+    const stm = "SELECT reviews.id review_id, reviews.*, users.* FROM reviews JOIN users ON reviews.user_id = users.id WHERE business_id = ?";
     const params = [req.params.id]
     request(stm, params, res); 
 }
 
+function reviews_id(req, res){
+    const stm = "SELECT * FROM reviews WHERE id = ?";
+    const params = [req.params.id]
+    request(stm, params, res); 
+}
 
 
 function create(req, res) {
@@ -23,7 +28,7 @@ function create(req, res) {
     db.connection.query(stm_check_user, params_user , (error, results) => {
     error_server(error);
       if (results.length > 0) {
-        return res.status(400).json({ error: "You have already reviewed this business." });
+        return res.status(400).json({error: "You have already reviewed this business." });
       }
   
     //create new request 
@@ -42,7 +47,6 @@ function create(req, res) {
 
 
 
-  // Last Reviews
 
 function reviews_last(req, res){
     const stm =
@@ -50,7 +54,18 @@ function reviews_last(req, res){
     const params = [req.params.id]
     request(stm, params, res); 
 }
+
+function reviews_likes(req,res){
+  const {likes, dislikes, id} = req.body
+  const params = [likes, dislikes, id]
+  const stm =
+  "UPDATE reviews SET likes = ?, dislikes = ? WHERE id = ?";
+  request(stm, params, res); 
+
+}
  
+
+
   
 
-module.exports = {reviews_all, create, reviews_last}
+module.exports = {reviews_all, reviews_id, create, reviews_last, reviews_likes}
