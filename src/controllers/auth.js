@@ -1,5 +1,5 @@
 const fs = require("fs");
-const {Buffer} = require('buffer');
+const { Buffer } = require("buffer");
 const path = require("path");
 const db = require("../database.js");
 const error_server = require("../utils/error.js");
@@ -7,48 +7,64 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const request = require("../utils/request.js");
 require("dotenv").config();
+const Mailjet = require("node-mailjet");
+
 
 
 function register(req, res) {
-  const { firstname, lastname, email, password, country, role, avatar } = req.body;
-  console.log('Request body:', req.body); 
-  try {
-    const base64Data = avatar.replace(/^data:image\/\w+;base64,/, "");
-    const imageBuffer = Buffer.from(base64Data, "base64");
+  const { firstname, lastname, email, password, country, role, avatar } =
+    req.body;
+  console.log("Request body:", req.body);
 
-    const filename = `${Date.now()}_${firstname}_${lastname}.jpg`;
-    const filePath = path.join("public/images", filename);
+  const stm_check = "SELECT * FROM users WHERE email = ?";
+  const param_user = [email];
+  db.connection.query(stm_check, param_user, (error, results) => {
+    error_server(error);
 
-    fs.writeFile(filePath, imageBuffer, (err) => {
-      if (err) {
-        console.error('Error saving image:', err);
-        return res.status(500).send("Error saving image");
+    if (results.length === 0) {
+      try {
+        const base64Data = avatar.replace(/^data:image\/\w+;base64,/, "");
+        const imageBuffer = Buffer.from(base64Data, "base64");
+        const filename = `${Date.now()}_${firstname}_${lastname}.jpg`;
+        const filePath = path.join("public/images", filename);
+
+        fs.writeFile(filePath, imageBuffer, (err) => {
+          if (err) {
+            console.error("Error saving image:", err);
+            return res.status(500).send("Error saving image");
+          }
+
+          const saltRounds = 10;
+          bcrypt.hash(password, saltRounds, (err, hash) => {
+            if (err) {
+              console.error("Error hashing password:", err);
+              return res.status(500).send("Error hashing password");
+            }
+
+            const avatarName = `/images/${filename}`;
+            const stm =
+              "INSERT INTO users (firstname, lastname, email, password, country, role, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            const params = [
+              firstname,
+              lastname,
+              email,
+              hash,
+              country,
+              role,
+              avatarName,
+            ];
+            request(stm, params, res);
+          });
+        });
+      } catch (error) {
+        console.error("Error in register function:", error);
+        return res.status(500).send("Server error");
       }
-
-      const saltRounds = 10;
-      bcrypt.hash(password, saltRounds, (err, hash) => {
-        if (err) {
-          console.error('Error hashing password:', err);
-          return res.status(500).send("Error hashing password");
-        }
-
-        const avatarName = `/images/${filename}`
-        const stm =
-          "INSERT INTO users (firstname, lastname, email, password, country, role, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        const params = [firstname, lastname, email, hash, country, role, avatarName];
-        request(stm, params, res);
-      });
-      
-    });
-  } catch (error) {
-    console.error('Error in register function:', error);
-    return res.status(500).send("Server error");
-  }
+    } else {
+      return res.status(404).json({ error: "User already exists" });
+    }
+  });
 }
-
-
-
-
 
 
 function login(req, res) {
@@ -88,22 +104,116 @@ function login(req, res) {
   });
 }
 
-// function login(req, res){
 
-//     const stm = "SELECT * FROM users WHERE email = ? AND password = ?";
-//     const { email, password } = req.body;
-//     const params = [ email, password ]
 
-//     db.connection.query(stm, params, (error, results) => {
-//         error_server(error);
-//         if (results.length === 0) {
-//           res.status(401).json({ message: "Invalid email or password" });
-//           return;
-//         }
-//         const user = results[0];
-//         res.status(200).json({ user });
-//       });
 
-// }
+function send_token(req, res) {
 
-module.exports = { login, register };
+  const {email} = req.body;
+
+  if (!email) {
+    return res.status(400).json({ status: "Please send your email" });
+  }
+
+  // Générer un token signé
+  const secretKey = process.env.JWT_SECRET
+  const token = jwt.sign(
+    { email }, 
+    secretKey,
+    { expiresIn: "1h" } )
+
+    // const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
+    const resetLink = `http://localhost:5173/auth/reset-password?token=${token}`;
+
+
+  const mailjet = Mailjet.apiConnect(
+    process.env.MJ_APIKEY_PUBLIC,
+    process.env.MJ_APIKEY_PRIVATE
+  );
+
+  const request = mailjet.post("send", { version: "v3.1" }).request({
+    Messages: [
+      {
+        From: {
+          Email: "lisa.eriksen@epitech.eu",
+          Name: "Yowl",
+        },
+        To: [
+          {
+            Email: `${email}`,
+            Name: "Yowl Member",
+          },
+        ],
+        Subject: "Reset your password!",
+        TextPart: "",
+        HTMLPart: `
+        <p>Seems like you forgot your password for your Yowl account. If this is true, click below to reset your password:</p>
+        <br>
+        <a href="${resetLink}">Reset Password</a>
+        <p>If you did not forget your password, you can safely ignore this email.</p>
+      `,
+      },
+    ],
+  });
+
+  request
+    .then((result) => {
+      console.log("Email sent:", result.body);
+      res
+        .status(200)
+        .json({ message: "Email sent successfully!", details: result.body });
+    })
+    .catch((err) => {
+      console.error("Error sending email:", err.statusCode, err.message);
+      res
+        .status(err.statusCode || 500)
+        .json({ error: "Failed to send email.", details: err.message });
+    });
+}
+
+
+
+function verify_token(req,res){
+
+   const token = req.body.token; 
+   const secretKey = process.env.JWT_SECRET
+
+   if(token){ 
+       const decode = jwt.verify(token, secretKey); 
+       res.json({ 
+           login: true, 
+           results: decode 
+       }); 
+   }else{ 
+       res.json({ 
+           login: false, 
+           results: 'error' 
+       }); 
+   }
+}
+
+function reset_password(req, res){
+  const {password, confirmPassword, email} = req.body
+
+  if( password != confirmPassword){
+    return res.status(400).json({ status: "Passwords don't match" });
+  }
+
+  const saltRounds = 10;
+  bcrypt.hash(password, saltRounds, (err, hash) => {
+
+    if (err) {
+      console.error("Error hashing password:", err);
+      return res.status(500).send("Error hashing password");
+    }
+
+    const params = [hash, email]
+    const stm = "UPDATE users SET password = ? WHERE email = ? "
+    request(stm, params, res)
+
+  })
+  
+
+}
+
+module.exports = { login, register, verify_token, reset_password, send_token };
