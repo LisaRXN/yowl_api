@@ -9,11 +9,8 @@ const request = require("../utils/request.js");
 require("dotenv").config();
 const Mailjet = require("node-mailjet");
 
-
-
 function register(req, res) {
-  const { firstname, lastname, email, password, country, role, avatar } =
-    req.body;
+  const { firstname, lastname, email, password, country, role, avatar } = req.body;
   console.log("Request body:", req.body);
 
   const stm_check = "SELECT * FROM users WHERE email = ?";
@@ -22,49 +19,57 @@ function register(req, res) {
     error_server(error);
 
     if (results.length === 0) {
-      try {
-        const base64Data = avatar.replace(/^data:image\/\w+;base64,/, "");
-        const imageBuffer = Buffer.from(base64Data, "base64");
-        const filename = `${Date.now()}_${firstname}_${lastname}.jpg`;
-        const filePath = path.join("public/images", filename);
 
-        fs.writeFile(filePath, imageBuffer, (err) => {
-          if (err) {
-            console.error("Error saving image:", err);
-            return res.status(500).send("Error saving image");
-          }
+      let avatarName;
+        if (!avatar) {
+        avatarName = "/images/avatar.png";
+      } else {
+        try {
+          const base64Data = avatar.replace(/^data:image\/\w+;base64,/, "");
+          const imageBuffer = Buffer.from(base64Data, "base64");
+          const filename = `${Date.now()}_${firstname}_${lastname}.jpg`;
+          const filePath = path.join("public/images", filename);
 
-          const saltRounds = 10;
-          bcrypt.hash(password, saltRounds, (err, hash) => {
+          fs.writeFile(filePath, imageBuffer, (err) => {
             if (err) {
-              console.error("Error hashing password:", err);
-              return res.status(500).send("Error hashing password");
+              console.error("Error saving image:", err);
+              return res.status(500).send("Error saving image");
             }
 
-            const avatarName = `/images/${filename}`;
-            const stm =
-              "INSERT INTO users (firstname, lastname, email, password, country, role, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            const params = [
-              firstname,
-              lastname,
-              email,
-              hash,
-              country,
-              role,
-              avatarName,
-            ];
-            request(stm, params, res);
+            avatarName = `/images/${filename}`; // L'avatar est sauvegardé, on utilise son chemin
           });
-        });
-      } catch (error) {
-        console.error("Error in register function:", error);
-        return res.status(500).send("Server error");
+        } catch (error) {
+          console.error("Error in register function:", error);
+          return res.status(500).send("Server error");
+        }
       }
+
+      const saltRounds = 10;
+      bcrypt.hash(password, saltRounds, (err, hash) => {
+        if (err) {
+          console.error("Error hashing password:", err);
+          return res.status(500).send("Error hashing password");
+        }
+
+        const stm =
+          "INSERT INTO users (firstname, lastname, email, password, country, role, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        const params = [
+          firstname,
+          lastname,
+          email,
+          hash,
+          country,
+          role,
+          avatarName,
+        ];
+        request(stm, params, res);
+      });
     } else {
       return res.status(404).json({ error: "User already exists" });
     }
   });
 }
+
 
 
 function login(req, res) {
@@ -192,28 +197,38 @@ function verify_token(req,res){
    }
 }
 
-function reset_password(req, res){
-  const {password, confirmPassword, email} = req.body
 
-  if( password != confirmPassword){
-    return res.status(400).json({ status: "Passwords don't match" });
+
+function reset_password(req, res) {
+  const { password, confirmPassword, email } = req.body;
+
+  if (!password || !confirmPassword || !email) {
+    return res.status(400).json({ status: "Invalid input" });
+  }
+  if (password !== confirmPassword) {
+    return res.status(400).json({ status: "Passwords do not match" });
   }
 
   const saltRounds = 10;
   bcrypt.hash(password, saltRounds, (err, hash) => {
-
     if (err) {
       console.error("Error hashing password:", err);
-      return res.status(500).send("Error hashing password");
+      return res.status(500).json({ status: "Error processing request" });
     }
 
-    const params = [hash, email]
-    const stm = "UPDATE users SET password = ? WHERE email = ? "
-    request(stm, params, res)
+    const params = [hash, email];
+    const stm = "UPDATE users SET password = ? WHERE email = ?";
+    db.connection.query(stm, params, (error, results) => {
+      error_server(error);
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ status: "Email not found" });
+      }
+      return res.status(200).json({ status: "Password reset successfully" });
+    })
 
-  })
+  });
+}
   
 
-}
 
 module.exports = { login, register, verify_token, reset_password, send_token };

@@ -10,8 +10,7 @@ const likesRoutes = require("./likes.routes.js");
 const commentsRoutes = require("./comments.routes.js");
 const categoriesRoutes = require("./categories.routes.js");
 const passportRoutes = require("./passport.routes.js");
-
-//const usersRoutes = require("./users.routes.js");
+const usersRoutes = require("./users.routes.js");
 
 router.use("/auth", authRoutes);
 router.use("/reviews", reviewsRoutes);
@@ -21,6 +20,6 @@ router.use("/likes", likesRoutes);
 router.use("/comments", commentsRoutes);
 router.use("/categories", categoriesRoutes);
 router.use("/passport", passportRoutes);
-//router.use("/users", usersRoutes);
+router.use("/users", usersRoutes);
 
 module.exports = router;
