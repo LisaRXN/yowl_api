@@ -21,6 +21,13 @@ function user_id(req, res) {
   request(stm, params, res); 
 }
 
+function user_email(req, res) {
+  const email = req.body.email
+  const stm = "SELECT * FROM users WHERE email = ?"; 
+  const params = [email];
+  request(stm, params, res); 
+}
+
 
 function user_reviews(req, res) {
   const id = req.params.id
@@ -69,5 +76,5 @@ function update(req,res){
 
 }
 
-module.exports = {update, user_id, user_reviews}
+module.exports = {update, user_id, user_reviews, user_email}
 

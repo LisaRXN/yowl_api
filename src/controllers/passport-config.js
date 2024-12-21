@@ -1,5 +1,6 @@
 const passport = require('passport');
 const db = require("../database.js");
+const error_server = require('../utils/error.js');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 require('dotenv').config(); 
 
@@ -32,6 +33,32 @@ passport.use(new GoogleStrategy({
     done(null, user);
 
 }));
+
+// passport.use(new GoogleStrategy({
+//     clientID: GOOGLE_CLIENT_ID,
+//     clientSecret: GOOGLE_CLIENT_SECRET,
+//     callbackURL: "http://localhost:3000/api/passport/auth/google/callback",
+// }, (accessToken, refreshToken, profile, done) => {
+    
+//     const user = {
+//         id: profile.id,
+//         displayName: profile.displayName,
+//         emails: profile.emails,
+//         token: accessToken  
+//       };    
+
+//     const stm_check = "SELECT * FROM users WHERE email = ?";
+//     const param_user = [profile.emails[0].value];
+//     db.connection.query(stm_check, param_user, (error, results) => {
+//     error_server(error);
+//     if (results.length === 0){
+//         return done(null, false, { message: 'REDIRECT_REGISTER' });
+//     }else{
+//         done(null, user);
+//     }
+//     })
+// }));
+
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user))
