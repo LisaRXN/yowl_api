@@ -32,10 +32,17 @@ const google_profile = (req, res) => {
         // }
 }
 
+const google_delete = (req, res) => {
+    const email = req.params.email
+    const params = [email]
+    const stm = "DELETE FROM google_users WHERE email = ?";
+    request(stm, params, res); 
+}
 
 module.exports = {
     googleAuth,
     googleAuthCallback,
     authSuccess,
     google_profile,
+    google_delete
 };

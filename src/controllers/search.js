@@ -18,7 +18,7 @@ function search_by(req, res) {
 
   if (param == "notation") {
     stm =
-      `SELECT business.*, categories.name as category, ROUND(AVG(rating),1) as rating FROM business 
+      `SELECT business.*, categories.name as category, categories.text, ROUND(AVG(rating),1) as rating FROM business 
        INNER JOIN categories ON categories.id = business.category_id 
        LEFT JOIN reviews on reviews.business_id = business.id
        WHERE business.name LIKE ? OR categories.name LIKE ? 
@@ -26,7 +26,7 @@ function search_by(req, res) {
        ORDER BY rating DESC`;
   }
   if (param == "reviews") {
-    stm = `SELECT  business.*, categories.name AS category, COUNT(reviews.id) AS review_count FROM business 
+    stm = `SELECT  business.*, categories.name AS category, categories.text, COUNT(reviews.id) AS review_count FROM business 
       INNER JOIN categories ON categories.id = business.category_id
       LEFT JOIN reviews ON reviews.business_id = business.id
       WHERE business.name LIKE ? OR categories.name LIKE ?

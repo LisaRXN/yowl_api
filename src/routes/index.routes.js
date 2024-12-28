@@ -1,6 +1,6 @@
 const router = require("express").Router();
-
 const authenticateJWT = require("../middlewares/auth.middleware.js");
+
 // Routes
 const authRoutes = require("./auth.routes.js");
 const businessRoutes = require("./business.routes.js");
