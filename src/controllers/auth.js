@@ -3,7 +3,7 @@ const { Buffer } = require("buffer");
 const path = require("path");
 const db = require("../database.js");
 const error_server = require("../utils/error.js");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const request = require("../utils/request.js");
 require("dotenv").config();
