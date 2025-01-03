@@ -26,12 +26,12 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
-app.use(session({
-    secret: 'ton_secret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }  // En mode développement, secure: false (mettre true pour HTTPS)
-}));
+// app.use(session({
+//     secret: 'ton_secret',
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: { secure: false }  // En mode développement, secure: false (mettre true pour HTTPS)
+// }));
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

@@ -6,6 +6,8 @@ const Reviews = {
             const query = 'INSERT INTO reviews (rating, title, content, user_id, business_id, createdAt) VALUES (?, ?, ?, ?, ?, ?)';
             connection.query(query, [rating, title, content, user_id, business_id, createdAt], (err, result) => {
                 if (err) reject(err);
+                console.log(result);  // Affiche tout le résultat pour déboguer
+
                 resolve(result.insertId); // Retourne l'ID de l'utilisateur ajouté
             });
         });

@@ -6,7 +6,11 @@ const User = {
             const query = 'INSERT INTO users (firstname, lastname, email, password, country, avatar, role) VALUES (?, ?, ?, ?, ?, ?, ?)';
             connection.query(query, [firstname, lastname, email, password, country, avatar, role], (err, result) => {
                 if (err) reject(err);
-                resolve(result.insertId); // Retourne l'ID de l'utilisateur ajouté
+                console.log(result);  // Affiche tout le résultat pour déboguer
+                if (result && result.insertId) {
+                    resolve(result.insertId); // Retourne l'ID de l'utilisateur ajouté
+                }
+                // resolve(result.insertId); // Retourne l'ID de l'utilisateur ajouté
             });
         });
     },
