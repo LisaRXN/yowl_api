@@ -22,15 +22,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //middleware
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://yowl-front-j95pm19om-lisa-eriksens-projects.vercel.app",
-      "https://yowl-front-rho.vercel.app",
-    ],
-  })
-);
+app.use(cors());
+
 app.use(express.json({ limit: "10mb" }));
 
 app.get("/", (req, res) => {
