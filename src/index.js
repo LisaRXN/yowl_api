@@ -27,7 +27,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://yowl-front-j95pm19om-lisa-eriksens-projects.vercel.app",
-      "https://yowl-front-rho.vercel.app'",
+      "https://yowl-front-rho.vercel.app",
     ],
   })
 );
