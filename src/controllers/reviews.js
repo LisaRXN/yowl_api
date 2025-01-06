@@ -15,6 +15,11 @@ function reviews_id(req, res){
     request(stm, params, res); 
 }
 
+function review_delete(req,res){
+  const stm = "DELETE FROM reviews WHERE id = ?";
+  const params = [req.params.id]
+  request(stm, params, res); 
+}
 
 function create(req, res) {
     const business_id = req.params.id;
@@ -68,4 +73,4 @@ function reviews_likes(req,res){
 
   
 
-module.exports = {reviews_all, reviews_id, create, reviews_last, reviews_likes}
+module.exports = {reviews_all, reviews_id, create, reviews_last, reviews_likes, review_delete}

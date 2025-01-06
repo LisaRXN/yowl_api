@@ -2,6 +2,7 @@ const db = require("../database.js");
 const error_server = require("./error.js");
 
 function request(stm, params = null, res) {
+
     db.connection.query(stm, params, (error, results) => {
     
         if (error_server(error, res)) {
