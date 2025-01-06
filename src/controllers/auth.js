@@ -9,47 +9,41 @@ const request = require("../utils/request.js");
 require("dotenv").config();
 const Mailjet = require("node-mailjet");
 
-function register(req, res) {
+
+async function register(req, res) {
   const { firstname, lastname, email, password, country, role, avatar } = req.body;
   console.log("Request body:", req.body);
 
   const stm_check = "SELECT * FROM users WHERE email = ?";
   const param_user = [email];
-  db.connection.query(stm_check, param_user, (error, results) => {
-    error_server(error);
+
+  db.connection.query(stm_check, param_user, async (error, results) => {
+    if (error) {
+      console.error("Database query error:", error);
+      return res.status(500).send("Database error");
+    }
 
     if (results.length === 0) {
+      let avatarName = "/images/avatar.png";
 
-      let avatarName;
-        if (!avatar) {
-        avatarName = "/images/avatar.png";
-      } else {
+      if (avatar) {
         try {
           const base64Data = avatar.replace(/^data:image\/\w+;base64,/, "");
           const imageBuffer = Buffer.from(base64Data, "base64");
           const filename = `${Date.now()}_${firstname}_${lastname}.jpg`;
           const filePath = path.join("public/images", filename);
 
-          fs.writeFile(filePath, imageBuffer, (err) => {
-            if (err) {
-              console.error("Error saving image:", err);
-              return res.status(500).send("Error saving image");
-            }
-
-            avatarName = `/images/${filename}`; // L'avatar est sauvegardé, on utilise son chemin
-          });
-        } catch (error) {
-          console.error("Error in register function:", error);
-          return res.status(500).send("Server error");
+          await fs.promises.writeFile(filePath, imageBuffer);
+          avatarName = `/images/${filename}`;
+        } catch (err) {
+          console.error("Error saving image:", err);
+          return res.status(500).send("Error saving image");
         }
       }
 
-      const saltRounds = 10;
-      bcrypt.hash(password, saltRounds, (err, hash) => {
-        if (err) {
-          console.error("Error hashing password:", err);
-          return res.status(500).send("Error hashing password");
-        }
+      try {
+        const saltRounds = 10;
+        const hash = await bcrypt.hash(password, saltRounds);
 
         const stm =
           "INSERT INTO users (firstname, lastname, email, password, country, role, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -62,15 +56,23 @@ function register(req, res) {
           role,
           avatarName,
         ];
-        request(stm, params, res);
-      });
+
+        db.connection.query(stm, params, (err, results) => {
+          if (err) {
+            console.error("Error inserting user:", err);
+            return res.status(500).send("Error inserting user");
+          }
+          res.status(201).send(results);
+        });
+      } catch (err) {
+        console.error("Error hashing password:", err);
+        return res.status(500).send("Error hashing password");
+      }
     } else {
-      return res.status(404).json({ error: "User already exists" });
+      return res.status(409).json({ error: "User already exists" });
     }
   });
 }
-
-
 
 function login(req, res) {
   const { email, password } = req.body;
@@ -127,9 +129,7 @@ function send_token(req, res) {
     secretKey,
     { expiresIn: "1h" } )
 
-    // const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
-    const resetLink = `http://localhost:5173/auth/reset-password?token=${token}`;
-
+    const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
 
   const mailjet = Mailjet.apiConnect(
     process.env.MJ_APIKEY_PUBLIC,

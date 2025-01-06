@@ -16,20 +16,6 @@ const authSuccess = (req, res) => {
 const google_profile = (req, res) => {
     const stm = "SELECT * FROM google_users ORDER BY id DESC LIMIT 1";
     request(stm, null, res); 
-    
-        // if (req.isAuthenticated()) {
-        //   // Si l'utilisateur est authentifié, renvoyer ses données
-        //   return res.json({
-        //     success: true,
-        //     user: req.user,
-        //   });
-        // } else {
-        //   // Redirection vers Register si non authentifié
-        //   return res.json({
-        //     success: false
-        //     // redirect: '/register',
-        //   });
-        // }
 }
 
 const google_delete = (req, res) => {
