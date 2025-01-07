@@ -24,7 +24,7 @@ async function register(req, res) {
     }
 
     if (results.length === 0) {
-      let avatarName = "/images/avatar.png";
+      let avatarName = "/images/image.png";
 
       if (avatar) {
         try {
@@ -129,7 +129,7 @@ function send_token(req, res) {
     secretKey,
     { expiresIn: "1h" } )
 
-    const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
   const mailjet = Mailjet.apiConnect(
     process.env.MJ_APIKEY_PUBLIC,

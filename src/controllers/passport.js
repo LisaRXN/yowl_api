@@ -6,7 +6,9 @@ const request = require("../utils/request.js");
 
 const googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] });   
 
+
 const googleAuthCallback = passport.authenticate('google', { failureRedirect: '/' },);   
+
 
 const authSuccess = (req, res) => {                                                     
        res.redirect("http://localhost:5173/auth/callback");
