@@ -11,7 +11,7 @@ const googleAuthCallback = passport.authenticate('google', { failureRedirect: '/
 
 
 const authSuccess = (req, res) => {                                                     
-       res.redirect("http://localhost:5173/auth/callback");
+       res.redirect("https://yowl-front-rho.vercel.app/auth/callback");
 };
 
 
