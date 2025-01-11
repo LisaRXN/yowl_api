@@ -10,16 +10,16 @@ function get_likes_user_review(req, res) {
 function create(req, res) {
   const { user_id, review_id, is_liked } = req.body;
   const params = [user_id, review_id, is_liked];
-  const stm_likes ="INSERT INTO likes (user_id, review_id, is_liked, is_disliked) VALUES (?, ?, ?)";
+  const stm_likes ="INSERT INTO likes (user_id, review_id, is_liked) VALUES (?, ?, ?)";
   request(stm_likes, params, res);
 }
 
 
 function update(req, res) {
-  const { user_id, review_id, is_liked, is_disliked } = req.body;
-  const params = [is_liked, is_disliked, user_id, review_id];
+  const { user_id, review_id, is_liked } = req.body;
+  const params = [is_liked, user_id, review_id];
   const stm =
-    "UPDATE likes SET is_liked = ?, is_disliked = ? WHERE user_id = ? AND review_id = ?";
+    "UPDATE likes SET is_liked = ? WHERE user_id = ? AND review_id = ?";
   request(stm, params, res);
 }
 
