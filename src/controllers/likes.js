@@ -8,9 +8,9 @@ function get_likes_user_review(req, res) {
 }
 
 function create(req, res) {
-  const { user_id, review_id, is_liked, is_disliked } = req.body;
-  const params = [user_id, review_id, is_liked, is_disliked];
-  const stm_likes ="INSERT INTO likes (user_id, review_id, is_liked, is_disliked) VALUES (?, ?, ?, ?)";
+  const { user_id, review_id, is_liked } = req.body;
+  const params = [user_id, review_id, is_liked];
+  const stm_likes ="INSERT INTO likes (user_id, review_id, is_liked, is_disliked) VALUES (?, ?, ?)";
   request(stm_likes, params, res);
 }
 
